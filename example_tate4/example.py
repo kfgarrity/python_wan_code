@@ -10,7 +10,18 @@ import  sys
 ops = ham_ops()
 
 
-if sys.argv[1] == "tate4_relaxed":
+
+if len(sys.argv) == 1:
+
+    print("You must run the code with one argument. ", sys.argv)
+    print("The possible arguments are: tate4_relaxed nbte4_relaxed tate4_unrelaxed")
+    print("for example")
+    print("python example.py tate4_relaxed")
+    print("goodbye")
+    print()
+    exit()
+    
+elif sys.argv[1] == "tate4_relaxed":
 
     h = wan_ham('tate4_relaxed/qe_hr.dat') #load the hamiltonian
     nstr = "tate4_relaxed"
