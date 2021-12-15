@@ -1,0 +1,57 @@
+template
+&control
+    calculation = 'scf'
+    prefix = 'qe'
+    pseudo_dir = '/home/kfg/psuedo/onvc'
+ outdir = "/tmp/small-relax-SCF_v3"
+    disk_io = 'low'
+    wf_collect = .true.
+    verbosity = 'high'    
+    tstress = .false.
+    tprnfor = .false.
+ /
+&system
+    ibrav=  0, 
+ nat = 10
+ ntyp = 2
+    ecutwfc = 70,
+    occupations = "smearing",
+    degauss = 0.01
+    lda_plus_u = .false.
+    lspinorb = .TRUE.
+    noncolin=.TRUE.
+use_all_frac = .TRUE.
+
+/
+&electrons
+    diagonalization='david'
+    mixing_mode = 'local-TF'
+    mixing_beta = 0.3
+    conv_thr = 1d-9
+ /
+&ions
+  ion_dynamics='bfgs',
+/
+&cell
+ cell_dynamics = 'bfgs'
+/
+ATOMIC_SPECIES
+Ta 180.94788 Ta.rel.pbesol.ln.upf
+Te 127.6 Te.pbesol.rel.upf
+ATOMIC_POSITIONS (crystal)
+Ta 0.0   0.0   0.75
+Ta 0.0   0.0   0.25
+Te 0.855602965   0.675470809   0.0
+Te 0.144397035   0.324529191   0.0
+Te 0.855602965   0.324529191   0.5
+Te 0.675470809   0.855602965   0.5
+Te 0.675470809   0.144397035   0.0
+Te 0.324529191   0.855602965   0.0
+Te 0.324529191   0.144397035   0.5
+Te 0.144397035   0.675470809   0.5
+CELL_PARAMETERS (angstrom)
+6.514901854  0.0  0.0
+0.0  6.514901854  0.0
+0.0  0.0  6.784398815
+K_POINTS automatic
+12 12 12  0 0 0
