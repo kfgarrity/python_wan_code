@@ -44,12 +44,53 @@ elif sys.argv[1] == "nbte4_relaxed":
 elif sys.argv[1] == "tate4_unrelaxed":
 
     h = wan_ham('tate4_expt_coords/qe_hr.dat') #load the hamiltonian
-    nstr = "nbte4_relaxed"
+    nstr = "tate4_UNrelaxed"
     fermi = 12.0470 # tate4 unrelaxed
     orbital_info = [["Ta", 2, ["d"]], ["Te", 8, ["p"]]] #ta case    
     orbs_metal = ops.get_orbitals(orbital_info, [["Ta"]], so=True)
     orbs_te = ops.get_orbitals(orbital_info, [["Te"]], so=True)
     metal = "Ta"
+
+elif sys.argv[1] == "tate4_relaxed_U1":
+
+    h = wan_ham('tate4_relaxed_U1/qe_hr.dat') #load the hamiltonian
+    nstr = "tate4_relaxed_U1"
+    fermi = 11.9964 # tate4 unrelaxed
+    orbital_info = [["Ta", 2, ["d"]], ["Te", 8, ["p"]]] #ta case    
+    orbs_metal = ops.get_orbitals(orbital_info, [["Ta"]], so=True)
+    orbs_te = ops.get_orbitals(orbital_info, [["Te"]], so=True)
+    metal = "Ta"
+
+elif sys.argv[1] == "tate4_relaxed_U2":
+
+    h = wan_ham('tate4_relaxed_U2/qe_hr.dat') #load the hamiltonian
+    nstr = "tate4_relaxed_U2"
+    fermi = 12.0410 # tate4 unrelaxed
+    orbital_info = [["Ta", 2, ["d"]], ["Te", 8, ["p"]]] #ta case    
+    orbs_metal = ops.get_orbitals(orbital_info, [["Ta"]], so=True)
+    orbs_te = ops.get_orbitals(orbital_info, [["Te"]], so=True)
+    metal = "Ta"
+
+elif sys.argv[1] == "tate4_relaxed_U3":
+
+    h = wan_ham('tate4_relaxed_U3/qe_hr.dat') #load the hamiltonian
+    nstr = "tate4_relaxed_U3"
+    fermi = 12.0871 # tate4 unrelaxed
+    orbital_info = [["Te", 8, ["p"]], ["Ta", 2, ["d"]] ] #ta case    
+    orbs_metal = ops.get_orbitals(orbital_info, [["Ta"]], so=True)
+    orbs_te = ops.get_orbitals(orbital_info, [["Te"]], so=True)
+    metal = "Ta"
+    
+elif sys.argv[1] == "nod":
+
+    h = wan_ham('nod/qe_hr.dat') #load the hamiltonian
+    nstr = "tate4_NOD"
+    fermi = 8.6984 # tate4 unrelaxed
+    orbital_info = [["Ta", 2, ["d"]], ["Te", 8, ["p"]]] #ta case    
+    orbs_metal = ops.get_orbitals(orbital_info, [["Ta"]], so=True)
+    orbs_te = ops.get_orbitals(orbital_info, [["Te"]], so=True)
+    metal = "Ta"
+    
     
 else:
     print("wrong choice ", sys.argv)
