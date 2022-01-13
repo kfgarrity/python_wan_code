@@ -3,7 +3,7 @@
 
 index1 index2 index3 kpt1 kpt2 kpt3 eigval1 eigval2 ... eigval68
 
-kpt1 kpt2 kpt3 are between -0.5 and 0.5 on a 24 x 24 x 24 grid
+kpt1 kpt2 kpt3 are between 0.0 and 1.0 on a 24 x 24 x 24 grid
 
 --
 
