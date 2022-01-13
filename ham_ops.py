@@ -845,6 +845,70 @@ class ham_ops:
         return points
 
 
+    def fermi_surf_3d(self, ham, fermi, nk1, nk2, nk3):
+        K = np.zeros((nk1+1,nk2+1,nk3+1, 3),dtype=float)
+        origen = np.zeros(3)
+        origen[:] = [-0.5,-0.5,-0.5]
+        for c1 in range(nk1+1):
+            for c2 in range(nk2+1):
+                for c3 in range(nk3+1):                
+                    K[c1,c2,c3,:] = origen + np.array([float(c1)/float(nk1) , float(c2)/float(nk2) , float(c3)/float(nk3)])
+
+
+        VALS = np.zeros((nk1+1,nk2+1,nk3+1, ham.nwan))
+
+        for c1 in range(nk1+1):
+            for c2 in range(nk2+1):
+                for c3 in range(nk3+1):                
+                    k = K[c1,c2,c3,:]
+                    val, vect,p = ham.solve_ham(k,proj=None)
+
+                    VALS[c1, c2, c3, :] = val
+
+                #                IMAGE[c1,c2] = np.sum(np.abs(1/(val - fermi + sig)))
+#                IMAGE[c1,c2] = np.sum( np.exp( -(val - fermi)**2 / sig**2))
+
+
+        v = VALS - fermi
+        points = []
+        nwan = VALS.shape[3]
+        
+        for c1 in range(nk1):
+            for c2 in range(nk2):
+                for c3 in range(nk3):                
+                    c1p = c1+1
+                    c2p = c2+1
+                    c3p = c3+1
+                    if c1p < nk1:
+                        for n in range(nwan):
+                            if (v[c1,c2,c3, n] < 0.0 and v[c1p,c2,c3, n] > 0.0) or (v[c1,c2,c3, n] > 0.0 and v[c1p,c2,c3, n] < 0.0):
+                                x = -v[c1,c2,c3, n] / (v[c1p,c2,c3, n] - v[c1,c2,c3, n])
+                                k1 = K[c1,c2,c3,:]
+                                k2 = K[c1p,c2,c3,:]
+                                kinterp = k1 * (1-x) + k2*x                            
+                                points.append(kinterp.tolist())
+
+                    if c2p < nk2:
+                        for n in range(nwan):
+                            if (v[c1,c2,c3, n] < 0.0 and v[c1,c2p,c3, n] > 0.0) or (v[c1,c2,c3, n] > 0.0 and v[c1,c2p,c3, n] < 0.0):
+                                x = -v[c1,c2,c3, n] / (v[c1,c2p,c3, n] - v[c1,c2,c3, n])
+                                k1 = K[c1,c2,c3,:]
+                                k2 = K[c1,c2p,c3,:]
+                                kinterp = k1 * (1-x) + k2*x                            
+                                points.append(kinterp.tolist())
+
+                    if c3p < nk3:
+                        for n in range(nwan):
+                            if (v[c1,c2,c3, n] < 0.0 and v[c1,c2,c3p, n] > 0.0) or (v[c1,c2,c3, n] > 0.0 and v[c1,c2,c3p, n] < 0.0):
+                                x = -v[c1,c2,c3, n] / (v[c1,c2,c3p, n] - v[c1,c2,c3, n])
+                                k1 = K[c1,c2,c3,:]
+                                k2 = K[c1,c2,c3p,:]
+                                kinterp = k1 * (1-x) + k2*x                            
+                                points.append(kinterp.tolist())
+                                
+        return points
+    
+
 
 
 
