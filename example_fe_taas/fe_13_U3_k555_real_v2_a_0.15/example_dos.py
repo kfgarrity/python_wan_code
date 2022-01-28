@@ -73,5 +73,47 @@ for i in range(kg[0]):
 outf.close()
 
 
+points = ops.fermi_surf_3d(h, fermi, 24,24,24)
+
+pts = np.array(points)
+
+np.savetxt("fermi_points_3d.csv", pts)
+
+x = pts[:,0]
+y = pts[:,1]
+z = pts[:,2]
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+ax.scatter(x,y,z,c=z)
+plt.savefig("fermi_points_k.pdf")
+
+plt.clf()
+
+A = np.array(  [[5.741957115 ,  0.000000000,   0.000000000],[ -2.870978557 ,  4.972680729 ,  0.000000000], [  0.000000000 ,  0.000000000  ,12.178046146]])
+
+B = 2 * np.pi * np.linalg.inv(A)
+Bt = B.T
+
+p2 = np.dot(pts, Bt)
+x = p2[:,0]
+y = p2[:,1]
+z = p2[:,2]
+
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+ax.scatter(x,y,z,c=z)
+plt.savefig("fermi_points_Bk.pdf")
+
+plt.clf()
+
+
+               
+
+
+
+#plt.show()
+
+
+
 print("done")
 print()
