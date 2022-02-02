@@ -8,6 +8,13 @@ import os
 from os.path import exists
 
 
+#This code does surface Chern number calculations starting from the
+#mbt bulk afm structure We do an even number of layers, and we also
+#delete the top and bottom layer to create two odd layer calculations.
+
+#The even calculation should have C=0, the odd ones should be C = +/- 1
+
+
 #SOC
 if not exists("bmt_afm_hr.dat"):
     print("unzipping the hr file, only do this once")
