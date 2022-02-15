@@ -66,7 +66,7 @@ class ham_ops:
         exp_ikr = []
         r = []
         for i in range(np.prod(supercell)):
-            exp_ikr.append(np.exp(1.0j*2*np.pi*np.dot(kprim, ss[i,:])))    #i
+            exp_ikr.append(np.exp(-1.0j*2*np.pi*np.dot(kprim, ss[i,:])))    #i
             r.append(range(ham_prim.nwan*i, ham_prim.nwan*(i+1))) #i
 
 #        t1=time.time()
@@ -123,7 +123,201 @@ class ham_ops:
                 
         return P, val_prim, val_ss
 
+    
+    def load_coords_str(self,atoms_frac_str):
+        types=[]
+        coords = []
 
+        for lines in atoms_frac_str.split("\n"):
+            print(lines)
+            sp = lines.split()
+            if len(sp) == 4:
+                types.append(sp[0])
+                coords.append([float(sp[1]), float(sp[2]), float(sp[3])])
+
+#        print(types)
+#        print(coords)
+        return types, coords
+
+
+    def get_coords_supercell(self,coords_small, supercell):
+
+        coords_small = np.array(coords_small)
+
+#        print(coords_small)
+        nat = np.shape(coords_small)[0]
+        
+        coords_super = np.zeros( (np.prod(supercell) * nat, 3))
+        c=0
+        factor = np.array([1.0/supercell[0], 1.0/supercell[1], 1.0/supercell[2]])
+#        print("factor ", factor)
+        for i in range(supercell[0]):
+            for j in range(supercell[1]):
+                for k in range(supercell[2]):
+                    for at in range(nat):
+                        coords_super[c, :] = coords_small[at,:]*factor + np.array([i,j,k])*factor
+                        c+=1
+        return coords_super
+
+    def match_orbitals(self, coords_small, coords_big, supercell, orbital_info_small, orbital_info_big, so=False):
+        nat = np.shape(coords_small)[0]
+        coords_super = self.get_coords_supercell(coords_small, supercell)
+        coords_big = np.array(coords_big)
+
+        pdict_small, pind_small, nwan_small = self.get_projection_dict(orbital_info_small,so=so)
+        pdict_big, pind_big,nwan_big = self.get_projection_dict(orbital_info_big,so=so)
+        
+        match_orbs = {}
+        match = {}
+        for i in range(np.shape(coords_super)[0]):
+            best = 1000000000.0
+            indbest = -99
+#            print("xxx ", coords_super[i,:])
+            for j in range(np.shape(coords_super)[0]):
+                d = np.abs(((coords_super[i,:] - coords_big[j,:])%1)%1)%1
+                d[0] = np.min(np.abs([d[0], d[0]-1, d[0]+1]))
+                d[1] = np.min(np.abs([d[1], d[1]-1, d[1]+1]))
+                d[2] = np.min(np.abs([d[2], d[2]-1, d[2]+1]))
+                val = np.sqrt(sum(d**2))
+                val = np.min(np.abs([val, val-1, val+1]))
+#                print("yy ", val," " , coords_big[j,:])
+                if  val < best:
+                    best =  val
+                    indbest = j
+            match[i] = indbest
+            print("match ", i, indbest, coords_super[i,:], coords_big[indbest,:])
+
+            for os,ob in zip(pind_small[i%nat],pind_big[indbest]):
+
+                match_orbs[ob] = os + nwan_small * (i//nat)
+            
+        return match, match_orbs
+    
+
+    def reorganize_ham(self,ham, match_orbs):
+        ham2 = copy.deepcopy(ham)
+
+        nr = ham.R.shape[0]
+
+        h1 = np.zeros((ham.nwan, ham.nwan), dtype=np.cfloat)
+        h2 = np.zeros((ham.nwan, ham.nwan), dtype=np.cfloat)
+        for i in range(nr):
+            h1[:,:] = np.reshape(ham.HR[i,:], (ham.nwan, ham.nwan))
+            for o1 in match_orbs.keys():
+                for o2 in match_orbs.keys():
+                    h2[match_orbs[o1], match_orbs[o2]] = h1[o1,o2]
+            ham2.HR[i,:] = np.reshape(h2, ham.nwan**2)
+
+        return ham2
+                    
+    def parse_coords(self,thestr):
+
+        types = []
+        coords = []
+        for c in thestr.split("\n"):
+            sp = c.split()
+#            print(c)
+#            print("sp ", sp )
+            if len(sp) != 4:
+                continue
+            types.append(sp[0])
+            coords.append([ float(sp[1]), float(sp[2]),float(sp[3])])
+
+        return coords, types
+        
+    
+    
+    def figure_out_layers(self, atoms_frac_str, orbital_info, direction="z", cut=0.5, so=True):
+
+        if direction == "z":
+            sdir=2
+        elif direction == "x":
+            sdir = 0
+        elif direction == "y":
+            sdir = 1
+        else:
+            print("no or  bad direction given, use x y z. We default to z")
+            sdir = "z"
+        
+
+        types, coords = self.load_coords_str(atoms_frac_str)
+        
+        cor = np.array(coords)
+        nat = len(types)
+        top = []
+        bot = []
+        for i in range(nat):
+            if cor[i,sdir] > cut:
+                top.append(i)
+            else:
+                bot.append(i)
+
+        print("top ", top)
+        print("bot ", bot)
+        top_orbs = []
+        bot_orbs = []
+        c = 0
+        for proj in orbital_info:
+
+            atom = proj[0]
+            natom = proj[1]
+            orbitals = proj[2]
+
+            for at in range(nat):
+                if at in top:
+                    topbool = True
+                else:
+                    topbool = False
+                    
+                if types[at] == atom:
+                    for o in orbitals:
+                        if o == "s":
+                            if topbool:
+                                top_orbs.append(c)
+                            else:
+                                bot_orbs.append(c)
+                            c+=1
+                        elif o == "p":
+                            for ii in range(3):
+                                if topbool:
+#                                    print(c, "add p ", at, atom, types[at], o, ii, "top ")
+                                    top_orbs.append(c)
+                                else:
+#                                    print(c, "add p ", at, atom, types[at], o, ii, "BOT ")                                    
+                                    bot_orbs.append(c)
+                                c+=1
+                        elif o == "d":
+                            for ii in range(5):
+                                if topbool:
+                                    top_orbs.append(c)
+                                else:
+                                    bot_orbs.append(c)
+                                c+=1
+                        elif o == "f":
+                            for ii in range(7):
+                                if topbool:
+                                    top_orbs.append(c)
+                                else:
+                                    bot_orbs.append(c)
+                                c+=1
+                            
+                
+        if so: #if spin orbit is true
+
+            top_orbs_so = []
+            bot_orbs_so = []
+
+            for t in top_orbs:
+                top_orbs_so.append(t*2)
+                top_orbs_so.append(t*2+1)
+            for t in bot_orbs:
+                bot_orbs_so.append(t*2)
+                bot_orbs_so.append(t*2+1)
+            return top_orbs_so, bot_orbs_so
+        else:
+            return top_orbs, bot_orbs
+
+    
     def delta(self,energy, temp):
 
         return np.exp(-0.5 * energy**2/temp**2) / (temp * ( 2 * np.pi)**0.5)
@@ -528,10 +722,14 @@ class ham_ops:
                     
                 Chern += phi / (2.0*np.pi)
 
-        if usemod:
-            return Chern, direct_gap, indirect_gap
-        else:
-            return Chern, direct_gap, val_max,cond_min
+                #        if usemod:
+                #            return Chern, direct_gap, indirect_gap
+                #        else:
+                #            return Chern, direct_gap, val_max,cond_min
+                
+
+        return Chern, direct_gap, indirect_gap
+
 
     def names_plt(self,names, yrange, d):
 
@@ -1671,9 +1869,9 @@ class ham_ops:
                                 RH_new[tuple(cellnew)][2][c2,d2,:] += rr_temp[c1,d1,:]                                
 
 
-        for key in RH_new:
-            print("key ", key)
-        print(len(RH_new))
+#        for key in RH_new:
+#            print("key ", key)
+#        print(len(RH_new))
         
         t2=time.time()
                                 
@@ -1726,6 +1924,57 @@ class ham_ops:
         print( 'TIME SUPERCELL', t1-t0, t2-t1, t3-t2)
         return hbig
 
+
+    def delete_orbitals(self, ham, to_delete, sparse=False):
+
+        nd = len(to_delete)
+        nwan_new = ham.nwan - nd
+        
+        hnew = wan_ham()
+        hnew.nwan =  nwan_new
+        hnew.nr = ham.nr
+
+        hnew.B = copy.copy(ham.B)
+        
+        to_keep = []
+        for i in range(ham.nwan):
+            if not (i in to_delete):
+                to_keep.append(i)
+        
+        
+        hnew.R = copy.copy(ham.R)
+
+        ht = np.zeros((nwan_new, nwan_new), dtype=np.csingle)
+
+        nr = np.shape(ham.HR)[0]
+        
+        if sparse:
+            hnew.HR = sps.lil_matrix((nr, nwan_new**2),dtype=np.csingle)
+            hnew.RR = sps.lil_matrix((nr, nwan_new**2,3),dtype=np.csingle)
+        else:
+            hnew.HR = np.zeros((nr, nwan_new**2),dtype=np.csingle)
+            hnew.RR = np.zeros((nr, nwan_new**2,3),dtype=np.csingle)            
+            
+        for c in range( nr):
+
+            h = np.reshape(ham.HR[c,:], (ham.nwan, ham.nwan))
+
+            for cc1,ii1 in enumerate(to_keep):
+                for cc2,ii2 in enumerate(to_keep):
+                    ht[cc1,cc2] = h[ii1,ii2]
+        
+            hnew.HR[c,:] = np.reshape(ht, nwan_new*nwan_new)
+
+            for ind in range(3):
+                h = np.reshape(ham.RR[c,:,ind], (ham.nwan, ham.nwan))
+                for cc1,ii1 in enumerate(to_keep):
+                    for cc2,ii2 in enumerate(to_keep):
+                        ht[cc1,cc2] = h[ii1,ii2]
+                
+                hnew.RR[c,:,ind] = np.reshape(ht, nwan_new*nwan_new)
+
+
+        return hnew
 
 
 
@@ -2232,30 +2481,16 @@ class ham_ops:
         print( 'TIME SUPERCELL', t1-t0, t2-t1, t3-t2)
         return hbig
 
-    def get_orbitals(self,projection_info, desired_orbitals, so=False, NCELLS=1, surfaceonly=False):
-        #projection_info example for Bi2Se3 with s and p orbital projections
-        #[["Bi", 2, ["s","p"]], ["Se", 3, ["s","p"]]]
-        #NCELLS for supercells
-        #surface only assumes 1x1 surface
-
-        #orbitals wanted example
-        #[["Bi"]]   all Bi orbitals
-
-        #[["Bi", "p"]] all Bi p orbitals
-
-        #[["Bi", "px"], ["Bi" ,"py"]] all Bi px, py oribitals
-
-        #[["Bi", "s"], ["Se", "s"]]  Bi s and Se s
-
-        #so for spin-orbit
+    def get_projection_dict(self,projection_info, so=False):
 
         c = 0
 
         projection_dict = {}
 
-        print( "get_orbs ", so)
-        print( projection_info)
-                
+        projection_inds= {}
+        
+        atoms_num = -1
+        
         for proj in projection_info:
 
             atom = proj[0]
@@ -2263,11 +2498,14 @@ class ham_ops:
             orbitals = proj[2]
 
             for n in range(natom):
+                atoms_num += 1
+                projection_inds[atoms_num] = []
                 for o in orbitals:
                     if o == "s":
                         if (atom, "s") not in projection_dict:
                             projection_dict[(atom, "s")] = []
                         projection_dict[(atom, "s")].append(c)
+                        projection_inds[atoms_num].append(c)
                         c += 1
                         
                     elif o == "p":
@@ -2276,6 +2514,11 @@ class ham_ops:
                             projection_dict[(atom, "pz")] = []
                             projection_dict[(atom, "py")] = []
                             projection_dict[(atom, "px")] = []
+
+
+                        projection_inds[atoms_num].append(c)
+                        projection_inds[atoms_num].append(c+1)
+                        projection_inds[atoms_num].append(c+2)
 
                         projection_dict[(atom, "p")].append(c)
                         projection_dict[(atom, "pz")].append(c)
@@ -2298,6 +2541,13 @@ class ham_ops:
                             projection_dict[(atom, "dx2y2")] = []
                             projection_dict[(atom, "dxy")] = []
 
+                        projection_inds[atoms_num].append(c)
+                        projection_inds[atoms_num].append(c+1)
+                        projection_inds[atoms_num].append(c+2)
+                        projection_inds[atoms_num].append(c+3)
+                        projection_inds[atoms_num].append(c+4)
+                            
+
                         projection_dict[(atom, "d")].append(c)
                         projection_dict[(atom, "dz2")].append(c)
                         c += 1
@@ -2318,7 +2568,37 @@ class ham_ops:
                         projection_dict[(atom, "dxy")].append(c)
                         c += 1
 
-        nwan = c
+        if so:
+            projection_inds_so = {}
+            for at in projection_inds.keys():
+                projection_inds_so[at] = []
+                for cc in projection_inds[at]:
+                    projection_inds_so[at].append(cc*2)
+                    projection_inds_so[at].append(cc*2+1 )
+            return projection_dict, projection_inds_so, c*2
+
+        return projection_dict, projection_inds, c
+        
+    def get_orbitals(self,projection_info, desired_orbitals, so=False, NCELLS=1, surfaceonly=False):
+        #projection_info example for Bi2Se3 with s and p orbital projections
+        #[["Bi", 2, ["s","p"]], ["Se", 3, ["s","p"]]]
+        #NCELLS for supercells
+        #surface only assumes 1x1 surface
+
+        #orbitals wanted example
+        #[["Bi"]]   all Bi orbitals
+
+        #[["Bi", "p"]] all Bi p orbitals
+
+        #[["Bi", "px"], ["Bi" ,"py"]] all Bi px, py oribitals
+
+        #[["Bi", "s"], ["Se", "s"]]  Bi s and Se s
+
+        #so for spin-orbit
+
+        projection_dict, pinds, nwan = self.get_projection_dict(projection_info)
+
+        
 
 #        if so:
 #            for (atom, orb) in projection_dict.keys():
