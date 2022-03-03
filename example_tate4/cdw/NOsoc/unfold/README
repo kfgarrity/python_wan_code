@@ -1,0 +1,48 @@
+Files (non-SOC)
+
+20 x 20 x 20 Fermi level intensity. Format:
+n1 n2 n3 kx ky kz intensity
+
+cdw_fermi_data.csv
+NOcdw_fermi_data.csv
+
+
+CDW 100 x 100 fermi surface intensity plots (unfolded)
+
+
+fermi_unfold_cdw_2d_KX=0_ky_kz_100.pdf
+fermi_unfold_cdw_2d_KX=0_ky_kz_100.txt
+fermi_unfold_cdw_2d_KY=0.5_kx_kz_100.pdf
+fermi_unfold_cdw_2d_KY=0.5_kx_kz_100.txt
+fermi_unfold_cdw_2d_KZ=0.5_kx_ky_100.pdf
+fermi_unfold_cdw_2d_KZ=0.5_kx_ky_100.txt
+fermi_unfold_cdw_2d_KZ=0_kx_ky_100.pdf
+fermi_unfold_cdw_2d_KZ=0_kx_ky_100.txt
+
+NON-CDW 100 x 100 fermi surface intensity plots (unfolded)
+
+fermi_unfold_NOcdw_2d_KX=0_ky_kz_100.pdf
+fermi_unfold_NOcdw_2d_KX=0_ky_kz_100.txt
+fermi_unfold_NOcdw_2d_kx_ky100.pdf
+fermi_unfold_NOcdw_2d_kx_ky100.txt
+fermi_unfold_NOcdw_2d_KY=0.5_kx_kz_100.pdf
+fermi_unfold_NOcdw_2d_KY=0.5_kx_kz_100.txt
+fermi_unfold_NOcdw_2d_KZ=0.5_kx_ky_100.pdf
+fermi_unfold_NOcdw_2d_KZ=0.5_kx_ky_100.txt
+fermi_unfold_NOcdw_2d_KZ=0_kx_ky_100.pdf
+fermi_unfold_NOcdw_2d_KZ=0_kx_ky_100.txt
+
+python scripts
+
+unfold2_fermi_nocdw.py
+unfold2_fermi.py
+unfold2.py
+
+
+Band structures (unfolded)
+
+unfold_cdw_image_v2.csv
+unfold_cdw_v2.pdf
+
+unfold_NOcdw_image_v2.csv
+unfold_NOcdw_image_v2.pdf
