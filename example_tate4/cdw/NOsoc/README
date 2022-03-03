@@ -1,0 +1,26 @@
+Files. Band structure, DOS, fermi surface for folded CDW non-SOC calculation.
+
+band_struct_metal_tate4_cdw_NOSOC.pdf
+band_struct_NOPROJ_tate4_cdw_NOSOC.pdf
+band_struct_tate4_cdw_NOSOC.pdf
+band_struct_ZOOM_NOPROJ_tate4_cdw_NOSOC.pdf
+
+DOS_energies_tate4_cdw_NOSOC.csv
+DOS_metal_tate4_cdw_NOSOC.pdf
+DOS_pdos_metal_tate4_cdw_NOSOC.csv
+DOS_pdos_te_tate4_cdw_NOSOC.csv
+DOS_proj_grid_metal_tate4_cdw_NOSOC.npy
+DOS_proj_grid_te_tate4_cdw_NOSOC.npy
+DOS_te_tate4_cdw_NOSOC.pdf
+DOS_tot_tate4_cdw_NOSOC.csv
+DOS_vals_grid_tate4_cdw_NOSOC.npy
+
+fermi_image_tate4_cdw_NOSOC.csv
+fermi_image_VALS_tate4_cdw_NOSOC.npy
+fermi_points_tate4_cdw_NOSOC.csv
+fermi_points_tate4_cdw_NOSOC.pdf
+fermi_surf.pdf
+
+proj_bandstruct_metal_tate4_cdw_NOSOC.csv
+proj_bandstruct_te_tate4_cdw_NOSOC.csv
+vals_bandstruct_tate4_cdw_NOSOC.csv
