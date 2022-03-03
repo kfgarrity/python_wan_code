@@ -1,0 +1,25 @@
+
+Non-SOC band structure
+
+band_struct_metal_tate4_NOD_NOSOC.pdf
+band_struct_tate4_NOD_NOSOC.pdf
+
+Non-SOC DOS 
+
+DOS_metal_tate4_NOD_NOSOC.pdf
+DOS_te_tate4_NOD_NOSOC.pdf
+
+Non-SOC fermi 
+
+fermi_image_tate4_NOD_NOSOC.csv
+fermi_image_VALS_tate4_NOD_NOSOC.npy
+fermi_points_tate4_NOD_NOSOC.csv
+fermi_points_tate4_NOD_NOSOC.pdf
+fermi_surf.pdf
+
+
+DATA for band structure plots
+
+proj_bandstruct_metal_tate4_NOD_NOSOC.csv
+proj_bandstruct_te_tate4_NOD_NOSOC.csv
+vals_bandstruct_tate4_NOD_NOSOC.csv
