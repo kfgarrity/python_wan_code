@@ -60,7 +60,7 @@ In CDW phase.
 At ky = 0, 0.25, or 0.5
 and at 3 fermi levels, nominal (0 eV), and +/- 0.1 eV.
 
-<<<<<<< HEAD
+
 - fermi_unfold_cdw_2d_KY_is_0.0_kx_kz_50_fermi_0.0.pdf
 - fermi_unfold_cdw_2d_KY_is_0.0_kx_kz_50_fermi_0.0.txt
 - fermi_unfold_cdw_2d_KY_is_0.0_kx_kz_50_fermi_-0.1.pdf
@@ -79,24 +79,3 @@ and at 3 fermi levels, nominal (0 eV), and +/- 0.1 eV.
 - fermi_unfold_cdw_2d_KY_is_0.5_kx_kz_50_fermi_0.1.pdf
 - fermi_unfold_cdw_2d_KY_is_0.5_kx_kz_50_fermi_-0.1.txt
 - fermi_unfold_cdw_2d_KY_is_0.5_kx_kz_50_fermi_0.1.txt
-
-=======
--fermi_unfold_cdw_2d_KY_is_0.0_kx_kz_50_fermi_0.0.pdf
--fermi_unfold_cdw_2d_KY_is_0.0_kx_kz_50_fermi_0.0.txt
--fermi_unfold_cdw_2d_KY_is_0.0_kx_kz_50_fermi_-0.1.pdf
--fermi_unfold_cdw_2d_KY_is_0.0_kx_kz_50_fermi_0.1.pdf
--fermi_unfold_cdw_2d_KY_is_0.0_kx_kz_50_fermi_-0.1.txt
--fermi_unfold_cdw_2d_KY_is_0.0_kx_kz_50_fermi_0.1.txt
--fermi_unfold_cdw_2d_KY_is_0.25_kx_kz_50_fermi_0.0.pdf
--fermi_unfold_cdw_2d_KY_is_0.25_kx_kz_50_fermi_0.0.txt
--fermi_unfold_cdw_2d_KY_is_0.25_kx_kz_50_fermi_-0.1.pdf
--fermi_unfold_cdw_2d_KY_is_0.25_kx_kz_50_fermi_0.1.pdf
--fermi_unfold_cdw_2d_KY_is_0.25_kx_kz_50_fermi_-0.1.txt
--fermi_unfold_cdw_2d_KY_is_0.25_kx_kz_50_fermi_0.1.txt
--fermi_unfold_cdw_2d_KY_is_0.5_kx_kz_50_fermi_0.0.pdf
--fermi_unfold_cdw_2d_KY_is_0.5_kx_kz_50_fermi_0.0.txt
--fermi_unfold_cdw_2d_KY_is_0.5_kx_kz_50_fermi_-0.1.pdf
--fermi_unfold_cdw_2d_KY_is_0.5_kx_kz_50_fermi_0.1.pdf
--fermi_unfold_cdw_2d_KY_is_0.5_kx_kz_50_fermi_-0.1.txt
--fermi_unfold_cdw_2d_KY_is_0.5_kx_kz_50_fermi_0.1.txt
->>>>>>> 66bba75caf5be19567692eb1d37775a9f0b656f4
