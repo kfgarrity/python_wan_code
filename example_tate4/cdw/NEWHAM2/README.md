@@ -76,4 +76,3 @@ and at 3 fermi levels, nominal (0 eV), and +/- 0.1 eV.
 -fermi_unfold_cdw_2d_KY_is_0.5_kx_kz_50_fermi_0.1.pdf
 -fermi_unfold_cdw_2d_KY_is_0.5_kx_kz_50_fermi_-0.1.txt
 -fermi_unfold_cdw_2d_KY_is_0.5_kx_kz_50_fermi_0.1.txt
-
