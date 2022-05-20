@@ -323,6 +323,62 @@ class ham_ops:
         return np.exp(-0.5 * energy**2/temp**2) / (temp * ( 2 * np.pi)**0.5)
     
 
+
+    def unfold_fermi_surf_2d(self, ham_prim, ham_ss, supercell, fermi, origin, k1, k2, nk1, nk2, temp=0.05):
+
+        K = np.zeros((nk1+1,nk2+1, 3),dtype=float)
+
+        k1=np.array(k1,dtype=float)
+        k2=np.array(k2,dtype=float)
+
+#        for c1 in range(nk1+1):
+#            for c2 in range(nk2+1):
+#                K[c1,c2,:] = origin + k1 * float(c1)/float(nk1) + k2 * float(c2)/float(nk2)
+
+        image_2d = np.zeros((nk1+1,nk2+1), dtype=float)
+        
+        for c1 in range(nk1+1):
+            print("c1 ", c1, nk1+1)
+            for c2 in range(nk2+1):
+                k = origin + k1 * float(c1)/float(nk1) + k2 * float(c2)/float(nk2)
+                K[c1,c2,:] = origin + k1 * float(c1)/float(nk1) + k2 * float(c2)/float(nk2)
+                P, val_prim, val_ss = self.unfold(ham_prim, ham_ss, supercell, k)
+                #                    for n in range(len(val_ss)):
+                d = self.delta(fermi-val_ss, temp)
+                image_2d[c1,c2] += np.sum(d[:] * P[:])
+
+        return K, image_2d
+                
+        
+    def unfold_fermi_surf(self, ham_prim, ham_ss, supercell, nk, temp=0.05, fermi=0.0, pdfname="unfold_grid.pdf"):
+
+        nk1 = nk[0]
+        nk2 = nk[1]
+        nk3 = nk[2]
+        
+        K = np.zeros( (nk1+1,nk2+1,nk3+1,3),dtype=float)
+        origen = np.zeros(3)
+        origen[:] = [-0.5,-0.5,-0.5]
+
+        image_3d = np.zeros((nk1+1, nk2+1, nk3+1), dtype=float)
+        
+        for c1 in range(nk1+1):
+            print("c1_3d ", c1, nk1+1)
+            for c2 in range(nk2+1):
+                for c3 in range(nk3+1):                
+                    k = origen + np.array([float(c1)/float(nk1) , float(c2)/float(nk2) , float(c3)/float(nk3)])
+                    K[c1,c2,c3,:] = k
+                    P, val_prim, val_ss = self.unfold(ham_prim, ham_ss, supercell, k)
+                    #                    for n in range(len(val_ss)):
+                    d = self.delta(fermi-val_ss, temp)
+#                    print("d ", np.shape(d))
+#                    print("P ", np.shape(P))
+#                    print(np.sum(d.T * P.T))
+                    image_3d[c1,c2,c3] += np.sum(d[:] * P[:])
+        return K, image_3d
+        
+
+        
     def unfold_bandstructure(self, ham_prim, ham_ss, supercell, kpath, temp=0.05, fermi=0.0, yrange=None, names=None, pdfname='unfold.pdf', num_energies=100):
 
         K = self.generate_kpath(kpath)
@@ -758,7 +814,7 @@ class ham_ops:
 
         return K
     
-    def band_struct(self,ham, kpath, proj = None, yrange=None, names=None, fermi=0.0, pdfname='bs.pdf', nbands=8, colorbar = True, show=False):
+    def band_struct(self,ham, kpath, proj = None, yrange=None, names=None, fermi=0.0, pdfname='bs.pdf', nbands=8, colorbar = True, show=False, spinpol=False, spinpol2=False):
 
         K = self.generate_kpath(kpath)
 
@@ -822,6 +878,41 @@ class ham_ops:
             else:
                 plt.plot(vals, 'b')
             colorbar = False
+
+        elif spinpol == True:
+            print("spin polarization")
+            vals2 = vals[:,range(0,nwan,2)]
+            projs = np.array(projs)
+            p1 = projs[:,range(0,nwan,2)]
+            p2 = projs[:,range(1,nwan,2)]
+            p = np.maximum(p1, p2)
+            print("np.min(p) ", np.min(p))
+            p = np.maximum(p, 0.5*np.ones(np.shape(p)))
+            print(" new np.min(p) ", np.min(p))
+            
+            x=np.array(range(vals2.shape[0]))
+            X = np.tile(x.T, (int(nbands/2),1)).T
+
+            plt.plot(X, vals2, 'k', linewidth=0.5,zorder=1)
+            plt.scatter(X, vals2, s=5, c=p, zorder=2)
+            
+        elif spinpol2 == True:
+            print("spin polarization2")
+            vals2 = vals[:,range(0,nwan,2)]
+            projs = np.array(projs)
+            p1 = projs[:,range(0,nwan,2)]
+            p2 = projs[:,range(1,nwan,2)]
+            p = np.maximum(p1, p2)
+            print("np.min(p) ", np.min(p))
+            p = np.maximum(p, 0.5*np.ones(np.shape(p)))
+            print(" new np.min(p) ", np.min(p))
+            
+            x=np.array(range(vals2.shape[0]))
+            X = np.tile(x.T, (int(nbands/2),1)).T
+
+            plt.plot(X, vals2, 'k', linewidth=0.5,zorder=1)
+            plt.scatter(X, vals2, s=5, c=p, zorder=2)
+            
         else:
 
             X = np.tile(x.T, (nbands,1)).T
@@ -977,9 +1068,10 @@ class ham_ops:
 
         for c1 in range(nk1+1):
             for c2 in range(nk2+1):
+                k = origin + k1 * float(c1)/float(nk1) + k2 * float(c2)/float(nk2)
                 K[c1,c2,:] = origin + k1 * float(c1)/float(nk1) + k2 * float(c2)/float(nk2)
 
-
+        
         VALS = np.zeros((nk1+1,nk2+1, ham.nwan))
         IMAGE = np.zeros((nk1+1, nk2+1))
 
@@ -1043,6 +1135,62 @@ class ham_ops:
         return points
 
 
+    def fd2(self,val, temp):
+
+        arg = (val )/temp #fixes overflow
+        arg[arg>85.0] = 85.0
+#        print(np.max(arg))
+        n = (np.exp( arg) +1)**-1
+
+        return n
+    
+    
+    def search_nest(self, ham, fermi, nk1, nk2, nk3, nq1, nq2, nq3,temp):
+        K = np.zeros((nk1,nk2,nk3, 3),dtype=float)
+        origen = np.zeros(3)
+        origen[:] = [-0.5,-0.5,-0.5]
+        for c1 in range(nk1):
+            for c2 in range(nk2):
+                for c3 in range(nk3):                
+                    K[c1,c2,c3,:] = origen + np.array([float(c1)/float(nk1) , float(c2)/float(nk2) , float(c3)/float(nk3)])
+
+
+        VALS = np.zeros((nk1,nk2,nk3, ham.nwan))
+        D = np.zeros((nk1,nk2,nk3),dtype=float)
+        FD = np.zeros((nk1,nk2,nk3, ham.nwan),dtype=float)        
+        for c1 in range(nk1):
+            for c2 in range(nk2):
+                for c3 in range(nk3):                
+                    k = K[c1,c2,c3,:]
+                    val, vect,p = ham.solve_ham(k,proj=None)
+
+                    VALS[c1, c2, c3, :] = val
+                    d = np.sum(self.delta(fermi-val, temp))
+                    D[c1,c2,c3] = d
+
+                    f = self.fd2(val - fermi, temp)
+                    FD[c1,c2,c3,:] = f
+                    
+                    
+        nest = np.zeros((nq1,nq2,nq3), dtype=float)
+        nest2 = np.zeros((nq1,nq2,nq3), dtype=float)
+        for c1 in range(nk1):
+            for c2 in range(nk2):
+                for c3 in range(nk3):                
+                    for q1 in range(nq1):
+                        for q2 in range(nq2):
+                            for q3 in range(nq3):                
+                                delta1 = (c1 + q1)%nk1
+                                delta2 = (c2 + q2)%nk2
+                                delta3 = (c3 + q3)%nk3
+                                nest[q1,q2,q3] += D[c1,c2,c3] * D[delta1, delta2, delta3]
+
+#                                for i in range(ham.nwan):
+#                                    for j in range(ham.nwan):
+#                                        nest2[q1,q2,q3] += np.real(( FD[c1, c2, c3, i] - FD[delta1, delta2, delta3, j]) / (VALS[c1, c2, c3, i] - VALS[delta1, delta2, delta3, j] + 1.0j*temp))
+        
+        return nest, nest2
+    
     def fermi_surf_3d(self, ham, fermi, nk1, nk2, nk3):
         K = np.zeros((nk1+1,nk2+1,nk3+1, 3),dtype=float)
         origen = np.zeros(3)
