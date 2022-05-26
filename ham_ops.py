@@ -121,7 +121,7 @@ class ham_ops:
 #        print( P)
 #        print( '-')
                 
-        return P, val_prim, val_ss
+        return P, val_prim, val_ss, vect_ss
 
     
     def load_coords_str(self,atoms_frac_str):
@@ -324,30 +324,35 @@ class ham_ops:
     
 
 
-    def unfold_fermi_surf_2d(self, ham_prim, ham_ss, supercell, fermi, origin, k1, k2, nk1, nk2, temp=0.05):
+    def unfold_fermi_surf_2d(self, ham_prim, ham_ss, supercell, fermi, origin, k1, k2, nk1, nk2, temp=0.05, PROJARR = []):
 
         K = np.zeros((nk1+1,nk2+1, 3),dtype=float)
 
         k1=np.array(k1,dtype=float)
         k2=np.array(k2,dtype=float)
 
-#        for c1 in range(nk1+1):
-#            for c2 in range(nk2+1):
-#                K[c1,c2,:] = origin + k1 * float(c1)/float(nk1) + k2 * float(c2)/float(nk2)
+        #        for c1 in range(nk1+1):
+        #            for c2 in range(nk2+1):
+        #                K[c1,c2,:] = origin + k1 * float(c1)/float(nk1) + k2 * float(c2)/float(nk2)
 
         image_2d = np.zeros((nk1+1,nk2+1), dtype=float)
-        
+        image_2d_proj = np.zeros((nk1+1,nk2+1, len(PROJARR)), dtype=float)
+                                 
         for c1 in range(nk1+1):
             print("c1 ", c1, nk1+1)
             for c2 in range(nk2+1):
                 k = origin + k1 * float(c1)/float(nk1) + k2 * float(c2)/float(nk2)
                 K[c1,c2,:] = origin + k1 * float(c1)/float(nk1) + k2 * float(c2)/float(nk2)
-                P, val_prim, val_ss = self.unfold(ham_prim, ham_ss, supercell, k)
-                #                    for n in range(len(val_ss)):
+                P, val_prim, val_ss, vect_ss = self.unfold(ham_prim, ham_ss, supercell, k)
+                                 #                    for n in range(len(val_ss)):
                 d = self.delta(fermi-val_ss, temp)
                 image_2d[c1,c2] += np.sum(d[:] * P[:])
+                for pind, proj in enumerate(PROJARR):
+                    p = np.real(np.sum(vect_ss[proj,:]*np.conj(vect_ss[proj, :]), 0))
+                    image_2d_proj[c1,c2, pind] +=  np.sum(d[:] * P[:] * p[:] )
+                    
 
-        return K, image_2d
+        return K, image_2d, image_2d_proj
                 
         
     def unfold_fermi_surf(self, ham_prim, ham_ss, supercell, nk, temp=0.05, fermi=0.0, pdfname="unfold_grid.pdf"):
@@ -368,7 +373,7 @@ class ham_ops:
                 for c3 in range(nk3+1):                
                     k = origen + np.array([float(c1)/float(nk1) , float(c2)/float(nk2) , float(c3)/float(nk3)])
                     K[c1,c2,c3,:] = k
-                    P, val_prim, val_ss = self.unfold(ham_prim, ham_ss, supercell, k)
+                    P, val_prim, val_ss, vect_ss = self.unfold(ham_prim, ham_ss, supercell, k)
                     #                    for n in range(len(val_ss)):
                     d = self.delta(fermi-val_ss, temp)
 #                    print("d ", np.shape(d))
@@ -379,7 +384,7 @@ class ham_ops:
         
 
         
-    def unfold_bandstructure(self, ham_prim, ham_ss, supercell, kpath, temp=0.05, fermi=0.0, yrange=None, names=None, pdfname='unfold.pdf', num_energies=100):
+    def unfold_bandstructure(self, ham_prim, ham_ss, supercell, kpath, temp=0.05, fermi=0.0, yrange=None, names=None, pdfname='unfold.pdf', num_energies=100, PROJARR=[]):
 
         K = self.generate_kpath(kpath)
     
@@ -393,12 +398,17 @@ class ham_ops:
         vals_prim = np.zeros((nk,nwan), dtype=float)
         vals_ss = np.zeros((nk,ham_ss.nwan), dtype=float)
         Pall = np.zeros((nk, nwan, ham_ss.nwan))
+        Pallproj = np.zeros((nk, ham_ss.nwan, len(PROJARR)))
         for i,k in enumerate(K):
 
-            P, val_prim, val_ss = self.unfold(ham_prim, ham_ss, supercell, k)
+            P, val_prim, val_ss, vect_ss = self.unfold(ham_prim, ham_ss, supercell, k)
             vals_prim[i,:] = val_prim - fermi
             Pall[i,:,:] = P
             vals_ss[i,:] = val_ss -fermi
+            for pind, proj in enumerate(PROJARR):
+                p = np.real(np.sum(vect_ss[proj,:]*np.conj(vect_ss[proj, :]), 0))
+                print("size P", np.shape(P), " p ", np.shape(p))
+                Pallproj[i,:, pind] +=  np.sum(P[:] * p[:], 0) #* p[:]
 
             #        fig, ax = plt.subplots()
 
@@ -423,9 +433,11 @@ class ham_ops:
         energies = np.arange(yrange[0], yrange[1], (yrange[1]-yrange[0])/float(num_energies))
 
         image = np.zeros((num_energies, nk),dtype=float)
+        imageproj = np.zeros((num_energies, nk, len(PROJARR)),dtype=float)
 
         Ps = np.sum(Pall, 1)
-
+        #        Pprojs = np.sum(Pallproj,1)
+        Pprojs = Pallproj
         max_band = np.max(vals_ss, 0)
         min_band = np.min(vals_ss, 0)        
 
@@ -452,6 +464,11 @@ class ham_ops:
                     d = self.delta(en-vals_ss[i,N], temp)
 
                     image[ind,i] += Ps[i,N] * d                    
+
+                    for pind,proj in enumerate(PROJARR):
+                        imageproj[ind, i,pind] += Pprojs[i,N,pind] * d
+                    
+
 #                    image[ind,i] += np.sum(Pall[i,:,N] * d)
 #                    for n in range(ham_prim.nwan):
 #                        image[num_energies-j-1,i] += Pall[i,n,N] * d
@@ -466,11 +483,15 @@ class ham_ops:
         limits = (0,nk-1,yrange[0], yrange[1])
         self.plot_image(image, limits, names, pdfname=pdfname)
 
+        for pind in range(len(PROJARR)):
+            self.plot_image(imageproj[:,:,pind], limits, names, pdfname=str(pind)+"_proj_"+pdfname)
+            
+
         t1=time.time()
         print( 'unfold plot image time', t1-t0)
         t0=t1
         
-        return image, limits
+        return image, limits, imageproj
 
 
     def plot_image(self,image, limits, names=None, pdfname='unfold.pdf'):
